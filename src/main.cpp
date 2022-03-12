@@ -68,11 +68,17 @@ void setup()
     delayMicroseconds(5);
 
     displaySetPos(0, 0);
-    displayPrint("Connection");
-    displaySetPos(0, 1);
-    displayPrint("Config: Esp32Clock");
+    displayPrint("Connecting");
 
-    wifiManager.autoConnect("Esp32Clock");
+    wifiManager.setConfigPortalTimeout(30);
+    wifiManager.setConnectTimeout(10);
+    wifiManager.setSaveConnectTimeout(30);
+    wifiManager.setConnectRetries(10);
+
+    do {
+        displayPrint(".");
+        wifiManager.autoConnect("Esp32Clock");
+    } while(WiFi.status() != WL_CONNECTED);
 
     timeClient.begin();
     dht.begin();
