@@ -2,18 +2,29 @@
 
 #include <memory>
 
-template <typename Context>
+class StateKeeper;
+
 class State
 {
 public:
-    State(std::shared_ptr<Context> context)
-        : m_context(context)
+    State(std::shared_ptr<StateKeeper> stateKeeper):
+        m_stateKeeper{stateKeeper}
     {
     }
     virtual void process() = 0;
-    virtual void shortClick() = 0;
-    virtual void longClick() = 0;
+    // virtual void processEvent(/* Event */) = 0;
+
+    template<typename StateType, typename ...Args>
+    void changeState(Args... args)
+    {
+        m_stateKeeper->state = std::make_shared<StateType>(m_stateKeeper, std::forward<Args>(args)...);
+    }
 
 private:
-    std::shared_ptr<Context> m_context;
+    std::shared_ptr<StateKeeper> m_stateKeeper;
+};
+
+struct StateKeeper
+{
+    std::shared_ptr<State> state;
 };

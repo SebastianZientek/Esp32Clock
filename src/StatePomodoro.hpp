@@ -1,16 +1,12 @@
 #pragma once
 
-#include <memory>
-
-#include "App.hpp"
-#include "DisplayDriver.hpp"
 #include "State.hpp"
 
-class StateClock : public State
+class StatePomodoro : public State
 {
 public:
-    StateClock(std::shared_ptr<StateKeeper> stateKeeper,
-               std::shared_ptr<DisplayDriver> displayDriver)
+    StatePomodoro(std::shared_ptr<StateKeeper> stateKeeper,
+                  std::shared_ptr<DisplayDriver> displayDriver)
         : State(stateKeeper)
         , m_displayDriver(displayDriver)
     {
@@ -19,7 +15,7 @@ public:
     void process() override
     {
         m_displayDriver->setPos(0, 1);
-        m_displayDriver->print("StateClock");
+        m_displayDriver->print("StatePomodoro");
     }
 
 private:
