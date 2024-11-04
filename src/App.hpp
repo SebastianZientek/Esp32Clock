@@ -5,8 +5,9 @@
 #include "ClockDisplay.hpp"
 #include "DisplayDriver.hpp"
 #include "State.hpp"
+#include "ButtonsManager.hpp"
 
-class App : public std::enable_shared_from_this<App>
+class App
 {
 public:
     void init();
@@ -15,5 +16,6 @@ public:
 private:
     std::shared_ptr<DisplayDriver> m_displayDriver{std::make_shared<DisplayDriver>()};
     ClockDisplay m_clockDisplay{m_displayDriver};
-    std::shared_ptr<State<App>> m_state;
+    std::shared_ptr<StateKeeper> m_stateKeeper;
+    ButtonsManager m_buttonsMgr;
 };

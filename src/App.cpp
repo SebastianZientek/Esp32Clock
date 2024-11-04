@@ -12,13 +12,15 @@
 #include "DisplayDriver.hpp"
 #include "State.hpp"
 #include "StateClock.hpp"
+#include "StatePomodoro.hpp"
+#include "TimeManager.hpp"
 
 namespace
 {
 WiFiManager wifiManager;
 WiFiUDP ntpUDP;
 NTPClient timeClient(ntpUDP, "europe.pool.ntp.org", 3600 * 1, 60000);
-ezButton button(13);
+// TimeManager timeManager;
 }  // namespace
 
 struct Time
@@ -44,13 +46,16 @@ Time getTime()
 void App::init()
 {
     m_displayDriver->init(21, 22, 23);
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
     m_displayDriver->setBrightness(50);
     m_displayDriver->setPos(0, 0);
+    m_displayDriver->clear();
 
     m_clockDisplay.init();
 
-    button.setDebounceTime(50);
-    m_state = std::make_shared<StateClock>(nullptr);
+    // button.setDebounceTime(50);
+    m_stateKeeper = std::make_shared<StateKeeper>();
+    m_stateKeeper->state = std::make_shared<StateClock>(m_stateKeeper, m_displayDriver);
 
     // m_displayDriver->print("Connecting");
 
@@ -66,6 +71,7 @@ void App::init()
     } while (WiFi.status() != WL_CONNECTED);
 
     timeClient.begin();
+    // timeManager.init();
 
     ArduinoOTA.begin();
 
@@ -73,30 +79,27 @@ void App::init()
     m_displayDriver->print(WiFi.localIP().toString().c_str());
     vTaskDelay(3000 / portTICK_PERIOD_MS);
     m_displayDriver->clear();
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
+
+    m_buttonsMgr.onClick([&](Event ev)
+    {
+        static int pos = 0;
+        pos = (pos + 1) % 3;
+        m_displayDriver->setPos(pos, 1);
+        m_displayDriver->printf("Event: %u", static_cast<int>(ev));
+    });
 }
 
 void App::update()
 {
     ArduinoOTA.handle();
+    m_buttonsMgr.update();
+    // timeManager.update();
 
-    button.loop();
     Time time = getTime();
-    // m_clockDisplay.printTime(time.hour, time.minute, time.second);
 
     static auto clickTime = 0;
-
-    if (button.isPressed())
-    {
-        clickTime = millis();
-    }
-
-    if (button.getState() == 0 && millis() - clickTime > 1000)
-    {
-        // m_clockDisplay.printTime(55, 55, 55);
-    }
-    else
-    {
-        m_clockDisplay.printTime(time.hour, time.minute, time.second, false);
-    }
-    vTaskDelay(100 / portTICK_PERIOD_MS);
+    m_clockDisplay.printTime(time.hour, time.minute, time.second, false);
+    m_displayDriver->setPos(0, 1);
+    // m_displayDriver->print(timeManager.getDateString().c_str());
 }
