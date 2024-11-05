@@ -1,6 +1,8 @@
 #pragma once
 
 #include <NTPClient.h>
+#include <TimeLib.h>
+#include <WiFiUdp.h>
 
 #include <cstdint>
 #include <string>
@@ -57,8 +59,25 @@ public:
         return tm.Minute;
     }
 
+    int getSecond()
+    {
+        time_t epochTime = m_timeClient.getEpochTime();
+        tmElements_t tm;
+        breakTime(epochTime, tm);
+        return tm.Second;
+    }
+
+    time_t getEpochTime()
+    {
+        return m_timeClient.getEpochTime();
+    }
+
+    long getEpochMinutes()
+    {
+        return m_timeClient.getEpochTime() / 60;
+    }
+
 private:
-    WiFiManager m_wifiManager;
     WiFiUDP m_ntpUDP;
     NTPClient m_timeClient{m_ntpUDP, "europe.pool.ntp.org", 3600 * 1, 60000};
 };

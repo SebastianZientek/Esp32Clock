@@ -4,20 +4,22 @@
 #include <memory>
 #include <functional>
 #include <array>
+#include "TimeManager.hpp"
 
 class ClockDisplay
 {
 public:
-    ClockDisplay(std::shared_ptr<DisplayDriver> displayDriver);
+    ClockDisplay(std::shared_ptr<DisplayDriver> displayDriver, std::shared_ptr<TimeManager> timeManager);
     void init();
-    void printTime(int hour, int minute, int second, bool big = true);
+    void printTime(bool big = true);
 
 private:
     std::array<std::function<void(int pos)>, 10> m_numbers;
     std::shared_ptr<DisplayDriver> m_displayDriver;
+    std::shared_ptr<TimeManager> m_timeManager;
 
     void prepareFonts(int variant);
     void prepareNumbers();
-    void printTimeBig(int hour, int minute, int second);
-    void printTimeAndDate(int hour, int minute, int second);
+    void printTimeBig();
+    void printTimeAndDate();
 };
