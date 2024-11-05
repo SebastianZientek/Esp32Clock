@@ -6,7 +6,7 @@
 #include <array>
 #include <functional>
 
-#include "EventHandler.hpp"
+#include "Event.hpp"
 
 class ButtonsManager
 {
@@ -54,6 +54,10 @@ public:
         if (isPressed(m_evBtns[1]))
         {
             m_clbk(Event::POMODORO_CLOCK_SWITCH);
+        }
+        if (isLongAction(m_evBtns[1]))
+        {
+            m_clbk(Event::POMODORO_EXIT);
         }
 
         if (isPressed(m_evBtns[2]))

@@ -1,35 +1,55 @@
-#include "ClockDisplay.hpp"
+#include "StateBigClock.hpp"
 
-#include "DisplayDriver.hpp"
 #include "Fonts.hpp"
 
-ClockDisplay::ClockDisplay(std::shared_ptr<DisplayDriver> displayDriver,
-                           std::shared_ptr<TimeManager> timeManager)
+#include "StateDateClock.hpp"
 
-    : m_displayDriver(displayDriver)
+StateBigClock::StateBigClock(std::shared_ptr<StateKeeper> stateKeeper,
+                             std::shared_ptr<DisplayDriver> displayDriver,
+                             std::shared_ptr<TimeManager> timeManager)
+    : State(stateKeeper)
+    , m_displayDriver(displayDriver)
     , m_timeManager(timeManager)
-{
-}
-
-void ClockDisplay::init()
 {
     prepareFonts(-1);
     prepareNumbers();
+    m_displayDriver->clear();
 }
 
-void ClockDisplay::printTime(bool big)
+void StateBigClock::process()
 {
-    if (big)
+    auto hour = m_timeManager->getHour();
+    auto minute = m_timeManager->getMinute();
+    auto second = m_timeManager->getSecond();
+
+    auto hFirst = hour / 10;
+    auto hSecond = hour - hFirst * 10;
+
+    auto mFirst = minute / 10;
+    auto mSecond = minute - mFirst * 10;
+
+    // Call function to print first number in given position
+    m_numbers[hFirst](1);
+    m_numbers[hSecond](5);
+
+    m_numbers[mFirst](11);
+    m_numbers[mSecond](15);
+
+    m_displayDriver->setPos(9, 0);
+    m_displayDriver->print(second % 2 ? '*' : ' ');
+    m_displayDriver->setPos(9, 1);
+    m_displayDriver->print(second % 2 ? '*' : ' ');
+}
+
+void StateBigClock::onEvent(Event event)
+{
+    if (event == Event::POMODORO_CLOCK_SWITCH)
     {
-        printTimeBig();
-    }
-    else
-    {
-        printTimeAndDate();
+        changeState<StateDateClock>(m_displayDriver, m_timeManager);
     }
 }
 
-void ClockDisplay::prepareFonts(int variant)
+void StateBigClock::prepareFonts(int variant)
 {
     m_displayDriver->createCustom(0, LT, variant);
     m_displayDriver->createCustom(1, UB, variant);
@@ -41,7 +61,7 @@ void ClockDisplay::prepareFonts(int variant)
     m_displayDriver->createCustom(7, LMB, variant);
 }
 
-void ClockDisplay::prepareNumbers()
+void StateBigClock::prepareNumbers()
 {
     m_numbers[0] = [this](int pos)
     {
@@ -162,45 +182,4 @@ void ClockDisplay::prepareNumbers()
         m_displayDriver->print(254);
         m_displayDriver->printCustom(3);
     };
-}
-
-void ClockDisplay::printTimeBig()
-{
-    auto hour = m_timeManager->getHour();
-    auto minute = m_timeManager->getMinute();
-    auto second = m_timeManager->getSecond();
-
-    auto hFirst = hour / 10;
-    auto hSecond = hour - hFirst * 10;
-
-    auto mFirst = minute / 10;
-    auto mSecond = minute - mFirst * 10;
-
-    // Call function to print first number in given position
-    m_numbers[hFirst](1);
-    m_numbers[hSecond](5);
-
-    m_numbers[mFirst](11);
-    m_numbers[mSecond](15);
-
-    m_displayDriver->setPos(9, 0);
-    m_displayDriver->print(second % 2 ? '*' : ' ');
-    m_displayDriver->setPos(9, 1);
-    m_displayDriver->print(second % 2 ? '*' : ' ');
-}
-
-void ClockDisplay::printTimeAndDate()
-{
-    auto currentEpochMinute = m_timeManager->getEpochMinutes();
-    static auto lastEpochMinute = currentEpochMinute;
-
-    if (currentEpochMinute != std::exchange(lastEpochMinute, currentEpochMinute)) {
-        m_displayDriver->clear();
-    }
-
-    m_displayDriver->setPos(currentEpochMinute % 13, 0);
-    m_displayDriver->print(m_timeManager->getTimeString().c_str());
-
-    m_displayDriver->setPos(currentEpochMinute % 11, 1);
-    m_displayDriver->print(m_timeManager->getDateString().c_str());
 }

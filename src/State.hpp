@@ -1,6 +1,8 @@
 #pragma once
 
 #include <memory>
+#include "Event.hpp"
+
 
 class StateKeeper;
 
@@ -12,7 +14,7 @@ public:
     {
     }
     virtual void process() = 0;
-    // virtual void processEvent(/* Event */) = 0;
+    virtual void onEvent(Event event) = 0;
 
     template<typename StateType, typename ...Args>
     void changeState(Args... args)
