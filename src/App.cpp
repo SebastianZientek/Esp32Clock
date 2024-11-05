@@ -9,10 +9,10 @@
 
 #include <memory>
 
-#include "ClockDisplay.hpp"
 #include "DisplayDriver.hpp"
 #include "State.hpp"
 #include "StateDateClock.hpp"
+#include "StateBigClock.hpp"
 #include "StatePomodoro.hpp"
 #include "TimeManager.hpp"
 
@@ -30,9 +30,9 @@ void App::init()
     m_displayDriver->clear();
 
     m_timeManager = std::make_shared<TimeManager>();
-    m_clockDisplay = std::make_shared<ClockDisplay>(m_displayDriver, m_timeManager);
     m_stateKeeper = std::make_shared<StateKeeper>();
-    m_stateKeeper->state = std::make_shared<StateDateClock>(m_stateKeeper, m_displayDriver, m_timeManager);
+    m_stateKeeper->state
+        = std::make_shared<StateBigClock>(m_stateKeeper, m_displayDriver, m_timeManager);
 
     m_displayDriver->print("Connecting");
     wifiManager.setConfigPortalTimeout(30);
@@ -49,21 +49,17 @@ void App::init()
     m_timeManager->init();
     ArduinoOTA.begin();
 
-    m_displayDriver->setPos(0,0);
+    m_displayDriver->setPos(0, 0);
     m_displayDriver->print(WiFi.localIP().toString().c_str());
     vTaskDelay(3000 / portTICK_PERIOD_MS);
     m_displayDriver->clear();
     vTaskDelay(1000 / portTICK_PERIOD_MS);
 
-    m_buttonsMgr.onClick([&](Event ev)
-    {
-        static int pos = 0;
-        pos = (pos + 1) % 3;
-        m_displayDriver->setPos(pos, 1);
-        m_displayDriver->printf("Event: %u", static_cast<int>(ev));
-    });
-
-    m_clockDisplay->init();
+    m_buttonsMgr.onClick(
+        [&](Event ev)
+        {
+            m_stateKeeper->state->onEvent(ev);
+        });
 }
 
 void App::update()

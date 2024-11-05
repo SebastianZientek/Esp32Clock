@@ -32,6 +32,17 @@ public:
         return std::string(buffer);
     }
 
+    std::string getShortTimeString()
+    {
+        time_t epochTime = m_timeClient.getEpochTime();
+        tmElements_t tm;
+        breakTime(epochTime, tm);
+
+        char buffer[6];
+        snprintf(buffer, sizeof(buffer), "%02d:%02d", tm.Hour, tm.Minute);
+        return std::string(buffer);
+    }
+
     std::string getDateString()
     {
         time_t epochTime = m_timeClient.getEpochTime();

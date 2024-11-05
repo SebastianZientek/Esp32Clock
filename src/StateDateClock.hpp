@@ -4,6 +4,7 @@
 
 #include "DisplayDriver.hpp"
 #include "State.hpp"
+#include "StatePomodoro.hpp"
 #include "TimeManager.hpp"
 
 class StateDateClock : public State
@@ -16,6 +17,7 @@ public:
         , m_displayDriver(displayDriver)
         , m_timeManager(timeManager)
     {
+        m_displayDriver->clear();
     }
 
     void process() override
@@ -33,6 +35,14 @@ public:
 
         m_displayDriver->setPos(currentEpochMinute % 11, 1);
         m_displayDriver->print(m_timeManager->getDateString().c_str());
+    }
+
+    void onEvent(Event event) override
+    {
+        if (event == Event::POMODORO_CLOCK_SWITCH)
+        {
+            changeState<StatePomodoro>(m_displayDriver, m_timeManager);
+        }
     }
 
 private:
