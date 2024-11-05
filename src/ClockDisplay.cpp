@@ -3,8 +3,11 @@
 #include "DisplayDriver.hpp"
 #include "Fonts.hpp"
 
-ClockDisplay::ClockDisplay(std::shared_ptr<DisplayDriver> displayDriver)
+ClockDisplay::ClockDisplay(std::shared_ptr<DisplayDriver> displayDriver,
+                           std::shared_ptr<TimeManager> timeManager)
+
     : m_displayDriver(displayDriver)
+    , m_timeManager(timeManager)
 {
 }
 
@@ -14,14 +17,15 @@ void ClockDisplay::init()
     prepareNumbers();
 }
 
-void ClockDisplay::printTime(int hour, int minute, int second, bool big)
+void ClockDisplay::printTime(bool big)
 {
     if (big)
     {
-        printTimeBig(hour, minute, second);
+        printTimeBig();
     }
-    else {
-        printTimeAndDate(hour, minute, second);   
+    else
+    {
+        printTimeAndDate();
     }
 }
 
@@ -160,8 +164,12 @@ void ClockDisplay::prepareNumbers()
     };
 }
 
-void ClockDisplay::printTimeBig(int hour, int minute, int second)
+void ClockDisplay::printTimeBig()
 {
+    auto hour = m_timeManager->getHour();
+    auto minute = m_timeManager->getMinute();
+    auto second = m_timeManager->getSecond();
+
     auto hFirst = hour / 10;
     auto hSecond = hour - hFirst * 10;
 
@@ -174,24 +182,25 @@ void ClockDisplay::printTimeBig(int hour, int minute, int second)
 
     m_numbers[mFirst](11);
     m_numbers[mSecond](15);
-    
+
     m_displayDriver->setPos(9, 0);
     m_displayDriver->print(second % 2 ? '*' : ' ');
     m_displayDriver->setPos(9, 1);
     m_displayDriver->print(second % 2 ? '*' : ' ');
 }
 
-void ClockDisplay::printTimeAndDate(int hour, int minute, int second)
+void ClockDisplay::printTimeAndDate()
 {
-    auto currentPos = (hour * minute) % 13;
-    static auto lastTimePos = currentPos;
+    auto currentEpochMinute = m_timeManager->getEpochMinutes();
+    static auto lastEpochMinute = currentEpochMinute;
 
-    if (lastTimePos != currentPos)
-    {
+    if (currentEpochMinute != std::exchange(lastEpochMinute, currentEpochMinute)) {
         m_displayDriver->clear();
-        lastTimePos = currentPos;
     }
 
-    m_displayDriver->setPos(lastTimePos, 0);
-    m_displayDriver->printf("%02d:%02d:%02d", hour, minute, second);
+    m_displayDriver->setPos(currentEpochMinute % 13, 0);
+    m_displayDriver->print(m_timeManager->getTimeString().c_str());
+
+    m_displayDriver->setPos(currentEpochMinute % 11, 1);
+    m_displayDriver->print(m_timeManager->getDateString().c_str());
 }

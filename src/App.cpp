@@ -9,39 +9,17 @@
 
 #include <memory>
 
+#include "ClockDisplay.hpp"
 #include "DisplayDriver.hpp"
 #include "State.hpp"
-#include "StateClock.hpp"
+#include "StateDateClock.hpp"
 #include "StatePomodoro.hpp"
 #include "TimeManager.hpp"
 
 namespace
 {
 WiFiManager wifiManager;
-WiFiUDP ntpUDP;
-NTPClient timeClient(ntpUDP, "europe.pool.ntp.org", 3600 * 1, 60000);
-// TimeManager timeManager;
 }  // namespace
-
-struct Time
-{
-    uint8_t hour;
-    uint8_t minute;
-    uint8_t second;
-};
-
-Time getTime()
-{
-    uint8_t s, m, h;
-    timeClient.update();
-    unsigned long unix_epoch = timeClient.getEpochTime();
-
-    h = hour(unix_epoch);
-    m = minute(unix_epoch);
-    s = second(unix_epoch);
-
-    return {h, m, s};
-}
 
 void App::init()
 {
@@ -51,14 +29,12 @@ void App::init()
     m_displayDriver->setPos(0, 0);
     m_displayDriver->clear();
 
-    m_clockDisplay.init();
-
-    // button.setDebounceTime(50);
+    m_timeManager = std::make_shared<TimeManager>();
+    m_clockDisplay = std::make_shared<ClockDisplay>(m_displayDriver, m_timeManager);
     m_stateKeeper = std::make_shared<StateKeeper>();
-    m_stateKeeper->state = std::make_shared<StateClock>(m_stateKeeper, m_displayDriver);
+    m_stateKeeper->state = std::make_shared<StateDateClock>(m_stateKeeper, m_displayDriver, m_timeManager);
 
-    // m_displayDriver->print("Connecting");
-
+    m_displayDriver->print("Connecting");
     wifiManager.setConfigPortalTimeout(30);
     wifiManager.setConnectTimeout(10);
     wifiManager.setSaveConnectTimeout(30);
@@ -66,13 +42,11 @@ void App::init()
 
     do
     {
-        // m_displayDriver->print(".");
+        m_displayDriver->print(".");
         wifiManager.autoConnect("Esp32Clock");
     } while (WiFi.status() != WL_CONNECTED);
 
-    timeClient.begin();
-    // timeManager.init();
-
+    m_timeManager->init();
     ArduinoOTA.begin();
 
     m_displayDriver->setPos(0,0);
@@ -88,18 +62,15 @@ void App::init()
         m_displayDriver->setPos(pos, 1);
         m_displayDriver->printf("Event: %u", static_cast<int>(ev));
     });
+
+    m_clockDisplay->init();
 }
 
 void App::update()
 {
     ArduinoOTA.handle();
     m_buttonsMgr.update();
-    // timeManager.update();
+    m_timeManager->update();
 
-    Time time = getTime();
-
-    static auto clickTime = 0;
-    m_clockDisplay.printTime(time.hour, time.minute, time.second, false);
-    m_displayDriver->setPos(0, 1);
-    // m_displayDriver->print(timeManager.getDateString().c_str());
+    m_stateKeeper->state->process();
 }
