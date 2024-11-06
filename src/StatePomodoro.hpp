@@ -50,6 +50,7 @@ public:
 
             if (m_secondsLeft <= 0)
             {
+                endSessionNotify();
                 m_mode = Mode::BREAK_WAIT;
             }
         }
@@ -60,6 +61,7 @@ public:
 
             if (m_secondsLeft <= 0)
             {
+                endSessionNotify();
                 m_mode = Mode::WORK_WAIT;
             }
         }
@@ -184,5 +186,23 @@ private:
         m_mode = Mode::BREAK;
         m_secondsLeft = left;
         m_endTimestamp = m_timeManager->getEpochTime() + m_secondsLeft;
+    }
+
+    void endSessionNotify()
+    {
+        ledcSetup(0, 800, 8);
+        ledcAttachPin(4, 0);
+    
+        for (int i = 0; i < 3; ++i)
+        {
+            for (int j = 0; j < 3; ++j)
+            {
+                ledcWrite(0, 128);
+                delay(80);
+                ledcWrite(0, 0);
+                delay(80);
+            }
+            delay(100);
+        }
     }
 };
