@@ -101,7 +101,7 @@ public:
         m_timeClient.setTimeOffset(secondsInHour * m_hoursOffset);
 
         m_preferences.begin("timer", false);
-        m_preferences.putInt("hoursOffset", m_hoursOffset % 24);
+        m_preferences.putInt("hoursOffset", m_hoursOffset);
         m_preferences.end();
     }
 
