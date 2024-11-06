@@ -21,11 +21,19 @@ public:
         m_displayDriver->setPos(0, 0);
         if (m_mode == Mode::WORK_WAIT)
         {
-            m_displayDriver->print("START WORK?");
+            m_displayDriver->setPos(0, 0);
+            m_displayDriver->print("START");
+            m_displayDriver->setPos(0, 1);
+            m_displayDriver->print("WORK?");
+            m_secondsLeft = workTime;
         }
         if (m_mode == Mode::BREAK_WAIT)
         {
-            m_displayDriver->print("START BREAK?");
+            m_displayDriver->setPos(0, 0);
+            m_displayDriver->print("START");
+            m_displayDriver->setPos(0, 1);
+            m_displayDriver->print("BREAK?");
+            m_secondsLeft = breakTime;
         }
         if (m_mode == Mode::WORK_PAUSE)
         {
@@ -52,7 +60,7 @@ public:
 
             if (m_secondsLeft <= 0)
             {
-                m_mode = Mode::BREAK_WAIT;
+                m_mode = Mode::WORK_WAIT;
             }
         }
 
