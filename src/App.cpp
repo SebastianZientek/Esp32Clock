@@ -39,6 +39,11 @@ void App::init()
     wifiManager.setConnectTimeout(10);
     wifiManager.setSaveConnectTimeout(30);
     wifiManager.setConnectRetries(10);
+    
+    if(!wifiManager.getWiFiIsSaved())
+    {
+        m_displayDriver->print("WIFI not configured");
+    }
 
     do
     {
@@ -58,6 +63,11 @@ void App::init()
     m_buttonsMgr.onClick(
         [&](Event ev)
         {
+            if (ev == Event::RESET_WIFI)
+            {
+                wifiManager.resetSettings();
+                ESP.restart();
+            }
             m_stateKeeper->state->onEvent(ev);
         });
 }

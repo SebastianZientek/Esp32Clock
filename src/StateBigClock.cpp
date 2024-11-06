@@ -14,9 +14,13 @@ StateBigClock::StateBigClock(std::shared_ptr<StateKeeper> stateKeeper,
     prepareFonts(-1);
     prepareNumbers();
     m_displayDriver->clear();
+
+    m_preferences.begin("big_clock", true);
+    m_blinkDots = m_preferences.getBool("blinkDots", 0);
+    m_preferences.end();
 }
 
-void StateBigClock::process();
+void StateBigClock::process()
 {
     auto hour = m_timeManager->getHour();
     auto minute = m_timeManager->getMinute();
@@ -36,9 +40,9 @@ void StateBigClock::process();
     m_numbers[mSecond](15);
 
     m_displayDriver->setPos(9, 0);
-    m_displayDriver->print(second % 2 ? '*' : ' ');
+    m_displayDriver->print(second % 2 || !m_blinkDots ? '*' : ' ');
     m_displayDriver->setPos(9, 1);
-    m_displayDriver->print(second % 2 ? '*' : ' ');
+    m_displayDriver->print(second % 2 || !m_blinkDots ? '*' : ' ');
 }
 
 void StateBigClock::onEvent(Event event)
@@ -50,6 +54,12 @@ void StateBigClock::onEvent(Event event)
         break;
     case Event::TIME_ADJUST:
         changeState<StateHoursAdjust>(m_displayDriver, m_timeManager);
+        break;
+    case Event::POMODORO_PAUSE:
+        m_blinkDots = !m_blinkDots;
+        m_preferences.begin("big_clock", false);
+        m_preferences.putBool("blinkDots", m_blinkDots);
+        m_preferences.end();
         break;
     }
 }
