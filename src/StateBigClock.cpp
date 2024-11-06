@@ -1,8 +1,8 @@
 #include "StateBigClock.hpp"
 
 #include "Fonts.hpp"
-
 #include "StateDateClock.hpp"
+#include "StateHoursAdjust.hpp"
 
 StateBigClock::StateBigClock(std::shared_ptr<StateKeeper> stateKeeper,
                              std::shared_ptr<DisplayDriver> displayDriver,
@@ -16,7 +16,7 @@ StateBigClock::StateBigClock(std::shared_ptr<StateKeeper> stateKeeper,
     m_displayDriver->clear();
 }
 
-void StateBigClock::process()
+void StateBigClock::process();
 {
     auto hour = m_timeManager->getHour();
     auto minute = m_timeManager->getMinute();
@@ -43,9 +43,14 @@ void StateBigClock::process()
 
 void StateBigClock::onEvent(Event event)
 {
-    if (event == Event::POMODORO_CLOCK_SWITCH)
+    switch (event)
     {
+    case Event::POMODORO_CLOCK_SWITCH:
         changeState<StateDateClock>(m_displayDriver, m_timeManager);
+        break;
+    case Event::TIME_ADJUST:
+        changeState<StateHoursAdjust>(m_displayDriver, m_timeManager);
+        break;
     }
 }
 

@@ -42,9 +42,13 @@ public:
             }
         }
 
+        if (isPressed(m_evBtns[0]))
+        {
+            m_clbk(Event::ACCEPT);
+        }
         if (isLongAction(m_evBtns[0]))
         {
-            m_clbk(Event::SUMMERTIME);
+            m_clbk(Event::TIME_ADJUST);
         }
         if (isVeryLongAction(m_evBtns[0]))
         {

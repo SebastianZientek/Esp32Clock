@@ -6,6 +6,7 @@
 
 #include <cstdint>
 #include <string>
+#include <Preferences.h>
 
 class TimeManager
 {
@@ -14,6 +15,12 @@ public:
     {
         m_timeClient.begin();
         m_timeClient.update();
+
+        m_preferences.begin("timer", true);
+        m_hoursOffset = m_preferences.getInt("hoursOffset", 0);
+        m_preferences.end();
+
+        m_timeClient.setTimeOffset(secondsInHour * m_hoursOffset);
     }
 
     void update()
@@ -88,7 +95,26 @@ public:
         return m_timeClient.getEpochTime() / 60;
     }
 
+    void increaseHoursOffset()
+    {
+        m_hoursOffset = (m_hoursOffset + 1) % 24;
+        m_timeClient.setTimeOffset(secondsInHour * m_hoursOffset);
+
+        m_preferences.begin("timer", false);
+        m_preferences.putInt("hoursOffset", m_hoursOffset % 24);
+        m_preferences.end();
+    }
+
+    int getHoursOffset()
+    {
+        return m_hoursOffset;
+    }
+
 private:
     WiFiUDP m_ntpUDP;
-    NTPClient m_timeClient{m_ntpUDP, "europe.pool.ntp.org", 3600 * 1, 60000};
+    NTPClient m_timeClient{m_ntpUDP, "europe.pool.ntp.org", secondsInHour * 1, 60000};
+    Preferences m_preferences;
+
+    static const auto secondsInHour = 3600;
+    int m_hoursOffset = 0;
 };

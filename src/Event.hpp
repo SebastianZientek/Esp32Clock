@@ -1,8 +1,9 @@
 #pragma once
 
 enum class Event{
-    SUMMERTIME,
+    TIME_ADJUST,
     RESET_WIFI,
+    ACCEPT,
 
     POMODORO_CLOCK_SWITCH,
     POMODORO_EXIT,
