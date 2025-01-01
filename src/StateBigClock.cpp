@@ -16,7 +16,7 @@ StateBigClock::StateBigClock(std::shared_ptr<StateKeeper> stateKeeper,
     m_displayDriver->clear();
 
     m_preferences.begin("big_clock", true);
-    m_blinkDots = m_preferences.getBool("blinkDots", 0);
+    m_blinkDots = m_preferences.getBool("blinkDots", true);
     m_preferences.end();
 }
 
